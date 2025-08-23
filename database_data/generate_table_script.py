@@ -1,4 +1,5 @@
 import sys
+from table_data import get_table_name
 
 def main():
     input_data = []
@@ -13,9 +14,9 @@ def generate_script(lines: list):
     fields_list = []
     for line in lines:
         core_name = get_core_name(line)
-        fields_list.append(core_name + " string")
+        fields_list.append(core_name + " STRING")
 
-    return 'create table log(date_string string, ' + ', '.join(fields_list) + ');'
+    return 'create table ' + get_table_name() + '(id INTEGER PRIMARY KEY, date_string STRING, ' + ', '.join(fields_list) + ');'
 
 def get_core_name(line: str) -> str:
     return line.split(':')[0].strip().replace(" ", "_").replace("-", "_").lower()

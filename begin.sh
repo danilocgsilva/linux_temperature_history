@@ -25,10 +25,11 @@ create_tables_if_required() {
 
 insert_date() {
     DATE_STRING=$(date "+%Y-%m-%d %H:%M:%S")
-    sqlite3 storage.db "INSERT INTO buffer (key, value) VALUES ('date', '""$DATE_STRING""')"
+    sqlite3 storage.db "INSERT INTO buffer (key, value) VALUES ('date_string', '""$DATE_STRING""')"
 }
 
 insert_data() {
+    clear_buffer
     insert_date
     DEFAULT_IFS="$IFS"
     IFS=$'\n'
@@ -39,6 +40,25 @@ insert_data() {
     do
         sqlite3 storage.db "$i"
     done
+
+    IFS=$'\n'
+    DATA_FROM_TIME=($(sqlite3 storage.db "SELECT key, value FROM buffer;"))
+    IFS="$DEFAULT_IFS"
+
+    FIELDS=""
+    VALUES=""
+    for i in "${DATA_FROM_TIME[@]}"
+    do
+        FIELD_ITERATION=$(echo $i | cut -f1 -d'|')
+        FIELDS=$FIELDS,$FIELD_ITERATION
+        
+        VALUE_ITERATION=$(echo $i | cut -f2 -d'|')
+        VALUES=$VALUES,\'$VALUE_ITERATION\'
+    done
+    FIELDS=$(echo $FIELDS | cut -c2-)
+    VALUES=$(echo $VALUES | cut -c2-)
+
+    sqlite3 storage.db "INSERT INTO log ($FIELDS) VALUES ($VALUES);"
 }
 
 clear_buffer() {
@@ -47,9 +67,8 @@ clear_buffer() {
 
 create_tables_if_required
 clear_buffer
-insert_data
-# while : ; do
-#     insert_date
-#     fetch_data | python3 database_data/insert_core_date.py
-#     sleep 1
-# done
+
+while : ; do
+    insert_data
+    sleep 1
+done

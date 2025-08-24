@@ -30,13 +30,17 @@ insert_date_into_buffer() {
     sqlite3 storage.db "INSERT INTO buffer (key, value) VALUES ('date_string', '""$DATE_STRING""')"
 }
 
-
+get_core_fetch_results() {
+    IFS=$'\n'
+    fetch_data | python3 database_data/generate_core_insert.py
+    IFS="$DEFAULT_IFS"
+}
 
 insert_data() {
     clear_buffer
     insert_date_into_buffer
     
-    IFS=$'\n'; CORE_INSERTS_RESULTS=($(fetch_data | python3 database_data/generate_core_insert.py)); IFS="$DEFAULT_IFS"
+    CORE_INSERTS_RESULTS=("$(get_core_fetch_results)")
 
     for i in "${CORE_INSERTS_RESULTS[@]}"; do
         sqlite3 storage.db "$i"

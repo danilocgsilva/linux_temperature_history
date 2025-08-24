@@ -10,6 +10,8 @@ if ! which python3 &> /dev/null; then
     exit
 fi
 
+DEFAULT_IFS="$IFS"
+
 fetch_data() {
     sensors | sed 1d | grep -i core
 }
@@ -23,32 +25,28 @@ create_tables_if_required() {
     fi
 }
 
-insert_date() {
+insert_date_into_buffer() {
     DATE_STRING=$(date "+%Y-%m-%d %H:%M:%S")
     sqlite3 storage.db "INSERT INTO buffer (key, value) VALUES ('date_string', '""$DATE_STRING""')"
 }
 
+
+
 insert_data() {
     clear_buffer
-    insert_date
-    DEFAULT_IFS="$IFS"
-    IFS=$'\n'
-    CORE_INSERTS_RESULTS=($(fetch_data | python3 database_data/generate_core_insert.py))
-    IFS="$DEFAULT_IFS"
+    insert_date_into_buffer
+    
+    IFS=$'\n'; CORE_INSERTS_RESULTS=($(fetch_data | python3 database_data/generate_core_insert.py)); IFS="$DEFAULT_IFS"
 
-    for i in "${CORE_INSERTS_RESULTS[@]}"
-    do
+    for i in "${CORE_INSERTS_RESULTS[@]}"; do
         sqlite3 storage.db "$i"
     done
 
-    IFS=$'\n'
-    DATA_FROM_TIME=($(sqlite3 storage.db "SELECT key, value FROM buffer;"))
-    IFS="$DEFAULT_IFS"
+    IFS=$'\n'; DATA_FROM_TIME=($(sqlite3 storage.db "SELECT key, value FROM buffer;")); IFS="$DEFAULT_IFS"
 
     FIELDS=""
     VALUES=""
-    for i in "${DATA_FROM_TIME[@]}"
-    do
+    for i in "${DATA_FROM_TIME[@]}"; do
         FIELD_ITERATION=$(echo $i | cut -f1 -d'|')
         FIELDS=$FIELDS,$FIELD_ITERATION
         

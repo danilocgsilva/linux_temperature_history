@@ -25,13 +25,18 @@ create_tables_if_required() {
 
 insert_date() {
     DATE_STRING=$(date "+%Y-%m-%d %H:%M:%S")
-    INSERTING_SCRIPT="INSERT INTO buffer (entry, value) VALUES ('date', '"$DATE_STRING"');"
+    INSERTING_SCRIPT="INSERT INTO buffer (entry, value) VALUES ('date', '""$DATE_STRING""');"
 
-    sqlite3 storage.db "INSERT INTO buffer (inserting_script) VALUES (\""$INSERTING_SCRIPT"\")"
+    sqlite3 storage.db "INSERT INTO buffer (inserting_script) VALUES (\"""$INSERTING_SCRIPT""\")"
+}
+
+insert_data() {
+    insert_date
+    fetch_data | python3 database_data/generate_core_insert.py
 }
 
 create_tables_if_required
-insert_date
+insert_data
 # while : ; do
 #     insert_date
 #     fetch_data | python3 database_data/insert_core_date.py

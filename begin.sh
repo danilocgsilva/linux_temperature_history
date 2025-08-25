@@ -50,17 +50,21 @@ insert_data() {
 
     FIELDS=""
     VALUES=""
+    OUTPUT_STDOUT=""
     for i in "${DATA_FROM_TIME[@]}"; do
         FIELD_ITERATION=$(echo $i | cut -f1 -d'|')
         FIELDS=$FIELDS,$FIELD_ITERATION
+        OUTPUT_STDOUT=$OUTPUT_STDOUT$FIELD_ITERATION": "
         
         VALUE_ITERATION=$(echo $i | cut -f2 -d'|')
         VALUES=$VALUES,\'$VALUE_ITERATION\'
+        OUTPUT_STDOUT=$OUTPUT_STDOUT$VALUE_ITERATION"\n"
     done
     FIELDS=$(echo $FIELDS | cut -c2-)
     VALUES=$(echo $VALUES | cut -c2-)
 
     sqlite3 storage.db "INSERT INTO log ($FIELDS) VALUES ($VALUES);"
+    echo -e $OUTPUT_STDOUT
 }
 
 clear_buffer() {

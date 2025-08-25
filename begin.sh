@@ -36,6 +36,20 @@ get_core_fetch_results() {
     IFS="$DEFAULT_IFS"
 }
 
+should_alarm() {
+    VALUES=("$@")
+    SUM=0
+
+    for i in "${VALUES[@]}"; do
+        SUM=$(($SUM + $i))
+    done
+
+    MEDIAN=$(($SUM / ${#VALUES[@]}))
+    if [ $MEDIAN -gt 50 ]; then
+        mpg123 alarm.mp3 > /dev/null 2>&1 &
+    fi
+}
+
 insert_data() {
     clear_buffer
     insert_date_into_buffer
@@ -51,20 +65,26 @@ insert_data() {
     FIELDS=""
     VALUES=""
     OUTPUT_STDOUT=""
+    DATA_ARRAY=()
     for i in "${DATA_FROM_TIME[@]}"; do
         FIELD_ITERATION=${i/|*/}
         FIELDS=$FIELDS,$FIELD_ITERATION
         OUTPUT_STDOUT=$OUTPUT_STDOUT$FIELD_ITERATION": "
         
         VALUE_ITERATION=${i/*|/}
+        DATA_ARRAY+=("$VALUE_ITERATION")
         VALUES=$VALUES,\'$VALUE_ITERATION\'
         OUTPUT_STDOUT=$OUTPUT_STDOUT$VALUE_ITERATION"\n"
     done
-    FIELDS=$(echo $FIELDS | cut -c2-)
-    VALUES=$(echo $VALUES | cut -c2-)
+    FIELDS=${FIELDS:1}
+    VALUES=${VALUES:1}
 
     sqlite3 storage.db "INSERT INTO log ($FIELDS) VALUES ($VALUES);"
     echo -e $OUTPUT_STDOUT
+
+    VALUES_ARRAY=("${DATA_ARRAY[@]:1}")
+
+    should_alarm "${VALUES_ARRAY[@]}"
 }
 
 clear_buffer() {
@@ -75,6 +95,6 @@ create_tables_if_required
 clear_buffer
 
 while : ; do
-    insert_data
+    insert_data &
     sleep 1
 done

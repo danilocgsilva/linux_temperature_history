@@ -52,11 +52,11 @@ insert_data() {
     VALUES=""
     OUTPUT_STDOUT=""
     for i in "${DATA_FROM_TIME[@]}"; do
-        FIELD_ITERATION=$(echo $i | cut -f1 -d'|')
+        FIELD_ITERATION=${i/|*/}
         FIELDS=$FIELDS,$FIELD_ITERATION
         OUTPUT_STDOUT=$OUTPUT_STDOUT$FIELD_ITERATION": "
         
-        VALUE_ITERATION=$(echo $i | cut -f2 -d'|')
+        VALUE_ITERATION=${i/*|/}
         VALUES=$VALUES,\'$VALUE_ITERATION\'
         OUTPUT_STDOUT=$OUTPUT_STDOUT$VALUE_ITERATION"\n"
     done

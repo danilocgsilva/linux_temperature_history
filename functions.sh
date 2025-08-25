@@ -36,7 +36,7 @@ should_alarm() {
 
     MEDIAN=$(($SUM / ${#VALUES[@]}))
 
-    if [ $MEDIAN -gt 50 ]; then
+    if [ $MEDIAN -gt 83 ]; then
         mpg123 alarm.mp3 > /dev/null 2>&1 &
         sqlite3 storage.db "UPDATE dialog SET dialog_is_on = '1';"
         echo ALARM

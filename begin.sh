@@ -10,6 +10,11 @@ if ! which python3 &> /dev/null; then
     exit
 fi
 
+if ! which mpg123 &> /dev/null; then
+    echo The script requires mpg123 to alarm.
+    exit
+fi
+
 DEFAULT_IFS="$IFS"
 
 source ./functions.sh

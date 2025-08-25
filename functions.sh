@@ -10,6 +10,8 @@ create_tables_if_required() {
         CREATE_TABLE_SCRIPT=$(fetch_data | python3 database_data/generate_table_script.py)
         sqlite3 $STORAGE_FILE_NAME "$CREATE_TABLE_SCRIPT"
         sqlite3 $STORAGE_FILE_NAME "create table buffer (id INTEGER PRIMARY KEY, key STRING, value STRING);"
+        sqlite3 $STORAGE_FILE_NAME "create table dialog (dialog_is_on STRING);"
+        sqlite3 $STORAGE_FILE_NAME "INSERT INTO dialog (dialog_is_on) VALUES ('0');"
     fi
 }
 
@@ -33,8 +35,11 @@ should_alarm() {
     done
 
     MEDIAN=$(($SUM / ${#VALUES[@]}))
+
     if [ $MEDIAN -gt 50 ]; then
         mpg123 alarm.mp3 > /dev/null 2>&1 &
+        sqlite3 storage.db "UPDATE dialog SET dialog_is_on = '1';"
+        echo ALARM
     fi
 }
 
@@ -68,7 +73,8 @@ insert_data() {
     VALUES=${VALUES:1}
 
     sqlite3 storage.db "INSERT INTO log ($FIELDS) VALUES ($VALUES);"
-    echo -e $OUTPUT_STDOUT
+    CLEANED_OUTPUT_STDOUT=${OUTPUT_STDOUT:0:${#OUTPUT_STDOUT}-2}
+    echo -e $CLEANED_OUTPUT_STDOUT
 
     VALUES_ARRAY=("${DATA_ARRAY[@]:1}")
 
